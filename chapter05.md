@@ -23,7 +23,16 @@ class _MyWidgetState extends State<MyWidget> {
 }
 ```
 
-이것이 의미하는 바는
+여기서 클래스를 두 개로 나눠진다.  
+이게 바로 클래스 내에 `build` 메소드를 구현하는 `StatlessWidget`과 또 다른 차이점
+
+여기서 (`State`)[https://api.flutter.dev/flutter/widgets/State-class.html] 위젯을 살펴보면
+
+> The logic and internal state for a StatefulWidget.
+>
+> State is information that (1) can be read synchronously when the widget is built and (2) might change during the lifetime of the widget. It is the responsibility of the widget implementer to ensure that the State is promptly notified when such state changes, using State.setState.
+
+위젯을 `setState` 에 반응하도록 만들어 준다는 걸 알 수 있다.
 
 ## Flexible
 
