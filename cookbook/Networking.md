@@ -28,7 +28,7 @@ AndroidManifest.xml 파일의 `<application />` 전에 넣는다.
 <true/>
 ```
 
-# Make a request
+# Make a request (GET)
 
 ```dart
 Future<http.Response> fetchAlbum() {
@@ -210,3 +210,13 @@ FutureBuilder<Album>(
 
 - 비교적 많이 호출되는 `build`에 구현하는 것은 비효율적이다.
 - 상태 변수에 `Future`를 직접 할당 후 사용하는데 이를 할당하게 되면 캐싱되므로 재요청 없이 빠르게 다시 그릴 수 있다.
+
+# Make authenticated requests (Modify req.headers)
+
+# Send data to server (POST)
+
+# Update data (PUT)
+
+# Delete data (DELETE)
+
+# WebSocket
