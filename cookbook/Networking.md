@@ -125,7 +125,7 @@ Arrow Function이 사용된다는 점과 `_`을 `switch-case`문의 `default`로
 
 ## serialize
 
-````dart
+```dart
 class User {
   final String name;
   final String email;
@@ -140,7 +140,8 @@ class User {
         'name': name,
         'email': email,
       };
-}```
+}
+```
 
 ## Parse JSON Array to List
 ```dart
@@ -158,7 +159,8 @@ Future<List<Photo>> fetchPhotos(http.Client client) async {
 
   // Synchronously run parsePhotos in the main isolate.
   return parsePhotos(response.body);
-}```
+}
+```
 
 ## [isolate](https://docs.flutter.dev/cookbook/networking/background-parsing)
 JSON parsing에 시간이 오래 걸리면 파싱을 백그라운드에서 진행할 수 있도록 코드 실행을 분리시켜 주는 `compute`를 사용한다.
@@ -176,7 +178,7 @@ class _MyAppState extends State<MyApp> {
   }
   // ···
 }
-````
+```
 
 `StatefulWidget`의 `State`위젯에서 `initState` 실행할때 같이 fetch 할 수 있게 해준다.
 
