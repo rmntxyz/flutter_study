@@ -309,3 +309,19 @@ late SharedPreferences prefs;
     }
   }
 ```
+
+## 빌드 중 코코아파드 에러 시
+
+macos와 ios 폴더 속 Podfile에서 특정 코드 커멘트 처리 (마지막 end 전 세 줄)
+
+```dart
+target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  # target 'RunnerTests' do
+  #   inherit! :search_paths
+  # end
+end
+```
