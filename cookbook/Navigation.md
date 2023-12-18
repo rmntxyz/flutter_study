@@ -119,7 +119,7 @@ class ScreenArguments {
 }
 ```
 
-2. ModalRoute.of()를 사용해 args 추출 & 표시
+2. 위젯 빌드 메소드에서 ModalRoute.of()를 사용해 args 추출 & 표시
 
 ```dart
 Widget build(BuildContext context) {
@@ -136,11 +136,49 @@ Widget build(BuildContext context) {
   }
 ```
 
-3. MaterialApp에서 onGenerateRoute을 사용하는 방법도 있음. 그런데 MaterialApp이 복잡해지지 않을까?
+3. MaterialApp에서 onGenerateRoute을 사용하는 방법도 있음. 그런데 MaterialApp이 복잡해지지 않을까? 모든 화면을 한 눈에 관리하기 위함인가?
 
 # 화면에서 데이터 반환하기
 
-새 화면에서 얻은 데이터를 이전 화면으로 전달하려면 Navigator.pop(context, data) 사용
+1. 첫 번째 화면에서 두 번째 화면으로 Navigator.push() 후 결과값을 표시하도록 설정
+
+2. 두 번째 화면에서 유저 액션이 끝나면 `Navigator.pop(context, data)` 형태로 첫 번쨰 화면으로 전달
+
+```dart
+class FirstScreen extends StatefulWidget {
+  const FirstScreen({super.key});
+
+  @override
+  State<FirstScreen> createState() => _FirstScreenState();
+}
+
+class _FirstScreenState extends State<FirstScreen> {
+  @override
+  Widget build (BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {
+         _navigateAndDisplaySelection(context);
+      },
+      child: const Text('Pick an option, any option!')
+    )
+  }
+
+  Future<void> _navigateAndDisplaySelection(BuildContext context) async {
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SecondScreen()),
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..removeCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text('$result')));
+  }
+}
+
+```
 
 ```dart
 class SecondScreen extends StatelessWidget {
