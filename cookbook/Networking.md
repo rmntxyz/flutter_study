@@ -1,4 +1,6 @@
-# Add the http package.
+# Fetch data (GET)
+
+## Add the http package.
 
 ```sh
 $ flutter pub add http
@@ -8,7 +10,7 @@ $ flutter pub add http
 import 'package:http/http.dart' as http;
 ```
 
-## Android
+### Android
 
 AndroidManifest.xml 파일의 `<application />` 전에 넣는다.
 
@@ -17,7 +19,7 @@ AndroidManifest.xml 파일의 `<application />` 전에 넣는다.
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
-## iOS
+### iOS
 
 - for debug: `macos/Runner/DebugProfile.entitlements`
 - for release: `macos/Runner/Release.entitlements`
@@ -28,7 +30,7 @@ AndroidManifest.xml 파일의 `<application />` 전에 넣는다.
 <true/>
 ```
 
-# Make a request (GET)
+## Make a request
 
 ```dart
 Future<http.Response> fetchAlbum() {
@@ -49,7 +51,7 @@ asyncValue.then((int value) {
 
 비동기 작업의 이해가 필요.
 
-# Convert the response into a custom Dart object.
+## Convert the response into a custom Dart object.
 
 ```dart
 // 함수를 async로 선언
@@ -123,7 +125,7 @@ void main() {
 
 Arrow Function이 사용된다는 점과 `_`을 `switch-case`문의 `default`로 사용한다는 점이 신기하다.
 
-## serialize
+### serialize
 
 ```dart
 class User {
@@ -143,7 +145,8 @@ class User {
 }
 ```
 
-## Parse JSON Array to List
+### Parse JSON Array to List
+
 ```dart
 // A function that converts a response body into a List<Photo>.
 List<Photo> parsePhotos(String responseBody) {
@@ -162,10 +165,11 @@ Future<List<Photo>> fetchPhotos(http.Client client) async {
 }
 ```
 
-## [isolate](https://docs.flutter.dev/cookbook/networking/background-parsing)
+### [isolate](https://docs.flutter.dev/cookbook/networking/background-parsing)
+
 JSON parsing에 시간이 오래 걸리면 파싱을 백그라운드에서 진행할 수 있도록 코드 실행을 분리시켜 주는 `compute`를 사용한다.
 
-# Fetch the data
+## Fetch the data
 
 ```dart
 class _MyAppState extends State<MyApp> {
@@ -182,7 +186,7 @@ class _MyAppState extends State<MyApp> {
 
 `StatefulWidget`의 `State`위젯에서 `initState` 실행할때 같이 fetch 할 수 있게 해준다.
 
-# Display the data
+## Display the data
 
 `FutureBuilder`를 사용한다.
 
@@ -213,12 +217,148 @@ FutureBuilder<Album>(
 - 비교적 많이 호출되는 `build`에 구현하는 것은 비효율적이다.
 - 상태 변수에 `Future`를 직접 할당 후 사용하는데 이를 할당하게 되면 캐싱되므로 재요청 없이 빠르게 다시 그릴 수 있다.
 
+</br>
+</br>
+
 # Make authenticated requests (Modify req.headers)
+
+Request의 Header 내용을 수정하는 방법
+
+`dart:io` 라이브러리의 `HttpHeaders` 클래스를 사용한다.
+
+```dart
+final response = await http.get(
+  Uri.parse('https://jsonplaceholder.typicode.com/albums/1'),
+  // Send authorization headers to the backend.
+  headers: {
+    HttpHeaders.authorizationHeader: 'Basic your_api_token_here',
+  },
+);
+```
+
+</br>
+</br>
 
 # Send data to server (POST)
 
+## Sending data
+
+요청에 데이터를 실어 보낸다.
+
+- `http.post()`를 사용
+- `headers`에 `Content-Type` 지정
+- `body`에 필요한 값을 `jsonEncode()`하여 보낸다.
+
+```dart
+Future<http.Response> createAlbum(String title) {
+  return http.post(
+    Uri.parse('https://jsonplaceholder.typicode.com/albums'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(<String, String>{
+      'title': title,
+    }),
+  );
+}
+```
+
+나머진 `GET`과 거의 유사함
+
+## `ElevatedButton`
+
+색이 채워져 있으며 그림자가 있고 누를때 높낮이가 바뀌는듯한 느낌을 주는 버튼
+
+버튼의 종류에는
+
+- TextButton  
+  ![TextButton](/images/Text.png)
+- OutlinedButton  
+  ![OutlinedButton](/images/Outlined.png)
+- FilledButton  
+  ![FilledButton](/images/Filled.png)
+- Elevated  
+  ![ElevatedButton](/images/Elevated.png)
+- IconButton  
+  ![IconButton](/images/Icon.png)
+
+</br>
+</br>
+
 # Update data (PUT)
+
+`http.put()`을 사용한다는 차이점 제외하고는 `POST`와 거의 유사
+
+```dart
+Future<http.Response> updateAlbum(String title) {
+  return http.put(
+    Uri.parse('https://jsonplaceholder.typicode.com/albums/1'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(<String, String>{
+      'title': title,
+    }),
+  );
+}
+```
+
+</br>
+</br>
 
 # Delete data (DELETE)
 
+`http.delete()`을 사용한다는 차이점 제외하고는 `GET`과 거의 유사
+
+```dart
+Future<http.Response> deleteAlbum(String id) async {
+  final http.Response response = await http.delete(
+    Uri.parse('https://jsonplaceholder.typicode.com/albums/$id'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+  );
+
+  return response;
+}
+```
+
+</br>
+</br>
+
 # WebSocket
+
+서버와 커넥션을 유지한 상태로 양방향 통신을 할 수 있게 해주는 패키지
+
+웹소켓 채널을 통해 서버를 매개로 다른 사용자와 거의 실시간으로 통신을 할 수 있다. (데이터를 보내는 요청 당 커넥션을 맺고 끊는 비용이 없음)
+
+## Connect to a Websocket server
+
+```dart
+final channel = WebSocketChannel.connect(
+  Uri.parse('wss://echo.websocket.events'),
+);
+```
+
+## Listen for messages from the server
+
+데이터가 채널을 통해 전달되므로 받아서 처리할 특별한 위젯 클래스가 필요하다. 예제에서는 `StreamBuilder`를 사용했다.
+
+```dart
+StreamBuilder(
+  stream: channel.stream,
+  builder: (context, snapshot) {
+    return Text(snapshot.hasData ? '${snapshot.data}' : '');
+  },
+)
+```
+
+`StreamBuilder`는 스트림 채널 listener임과 동시에 위젯을 생성해내는 팩토리 역할을 하는 위젯이다.
+
+서버에서 받아온 data chunk들을 모아 `String`으로 만들고 내부적으로 하나의 문자열당 하나의 `Text`위젯을 만들도록 했다.
+
+## Send data to the server
+
+```dart
+channel.sink.add('Hello!');
+```
