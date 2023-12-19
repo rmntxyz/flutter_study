@@ -140,3 +140,32 @@ body: Center(
           ),
 
 ```
+
+# UI 요소 손가락으로 움직이기
+
+## AnimationController ([링크](https://api.flutter.dev/flutter/animation/AnimationController-class.html))
+
+- 애니메이션 재생/거꾸로 재생/중단
+- 시작값과 종료값 사용
+- 예제에서는 SpringSimulation 클래스([링크](https://api.flutter.dev/flutter/physics/SpringSimulation-class.html))와 animateWith 메소드를 이용해 UI 요소가 튕기듯 제자리로 되돌아가는 효과 구현
+
+### Ticker providers
+
+AnimationController가 Ticker(애니메이션 프레임마다 콜백 함수 호출)를 사용하려면 필요. State를 이용한 애니메이션 구현 시에는 TickerProviderStateMixin이나 SingleTickerProviderStateMixin 클래스를 이용하면 적절한 TickerProvider가 제공(예제에서는 SingleTickerProviderStateMixin 사용). AnimationController의 vsync 파라미터를 통해 지정. 예제에서는 \_DraggableCardState가 SingleTickerProviderStateMixin이었으므로 `vsync: this`로 선언
+
+```dart
+class _DraggableCardState extends State<DraggableCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  Alignment _dragAlignment = Alignment.center;
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
+  }
+```
+
+## MediaQuery
+
+위젯의 사이즈 파악에 사용
