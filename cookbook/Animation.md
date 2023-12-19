@@ -30,37 +30,31 @@ Route _createRoute() {
   return PageRouteBuilder(
     pageBuilder: (context, animation, secondaryAnimation) => const Page2(),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return child;
+    const begin = Offset(0.0, 1.0);
+    const end = Offset.zero;
+    final tween = Tween(begin: begin, end: end);
+    final offsetAnimation = animation.drive(tween);
+
+     return SlideTransition(
+        position: offsetAnimation,
+        child: child,
+     );
     },
   );
 }
 ```
 
-## Tween
+### Tween
 
 시작값에서 종료값으로 전환하는 클래스(Tween<T extends Object?> class, [링크](https://api.flutter.dev/flutter/animation/Tween-class.html))
 
-## transitionBuilder의 animation 파라미터
+### transitionBuilder의 animation 파라미터
 
 Animation<double>[링크](https://docs.flutter.dev/ui/animations/tutorial#animationdouble). 0과 1 사이의 값을 생성.
 
-## SlideTransition
+### SlideTransition
 
 플러터의 AnimationWidget에 속하는 클래스.
-
-```dart
-transitionsBuilder: (context, animation, secondaryAnimation, child) {
-  const begin = Offset(0.0, 1.0);
-  const end = Offset.zero;
-  final tween = Tween(begin: begin, end: end);
-  final offsetAnimation = animation.drive(tween);
-
-  return SlideTransition(
-    position: offsetAnimation,
-    child: child,
-  );
-},
-```
 
 ## CurveTween
 
@@ -131,6 +125,7 @@ Widget build(BuildContext context) {
 # 페이드 인 앤 아웃
 
 ## AnimatedOpacity
+
 duration과 복수의 opacity를 지정하여 페이드 인/아웃 가능
 
 ```dart
