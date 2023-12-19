@@ -259,5 +259,264 @@ enum Vehicle implements Comparable<Vehicle> {
 
 )
 
+# 중첩된 네비게이션
 
+모든 route를 top-level에 설정해두면 엄청나게 많은 진입점이 존재하게 될 것. 모든 것을 관리하기도 쉽지 않을 것이고.
 
+그렇다면 하나의 route에 서로 다른 다수의 페이지를 중첩시켜 다룰 수 있게 하면 관리가 용이해질 것이다.
+
+top-level `Navigator`에 중첩시킨 또 다른 `Navigator`를 선언하여 보다 깔끔하게 구조화 가능하다.
+
+```dart
+const routeHome = '/';
+const routeSettings = '/settings';
+const routePrefixDeviceSetup = '/setup/';
+const routeDeviceSetupStart = '/setup/$routeDeviceSetupStartPage';
+const routeDeviceSetupStartPage = 'find_devices';
+const routeDeviceSetupSelectDevicePage = 'select_device';
+const routeDeviceSetupConnectingPage = 'connecting';
+const routeDeviceSetupFinishedPage = 'finished';
+```
+
+위 라우팅 구조를 분석해보면,
+
+- `/` 홈 화면
+- `/settings`: 설정 화면
+- `/setup/`: 셋업 화면의 프리픽스, 이 후에 나올 페이지들의 상위 레벨 라우팅 경로로 존재
+- `/setup/$routeDeviceSetupStartPage`: `find_devices` 페이지를 해당 라우터의 첫 페이지로 쓰기 위함
+- 나머지는 각 서브 라우팅 페이지들의 이름들이다.
+
+`MaterialApp` 같은 경우에는 top-level `Navigator`의 기능을 한다.  
+때문에 `Navigator` 클래스가 가지고 있는 `onGenerateRoute` 콜백 파라메터를 인스턴스 생성시 넣어줄 수 있다.
+
+`onGenerateRoute`는 push/pop 발생시 실행된다.  
+여기서 파라메터로 넘어온 값을 보고 해당되는 페이지를 라우팅 해 준다.
+
+```dart
+  onGenerateRoute: (settings) {
+    late Widget page;
+    if (settings.name == routeHome) {
+      page = const HomeScreen();
+    } else if (settings.name == routeSettings) {
+      page = const SettingsScreen();
+    } else if (settings.name!.startsWith(routePrefixDeviceSetup)) {
+      final subRoute =
+          settings.name!.substring(routePrefixDeviceSetup.length);
+      page = SetupFlow(
+        setupPageRoute: subRoute,
+      );
+    } else {
+      throw Exception('Unknown route: ${settings.name}');
+    }
+
+    return MaterialPageRoute<dynamic>(
+      builder: (context) {
+        return page;
+      },
+      settings: settings,
+    );
+  },
+```
+
+중첩된 페이지는 SetupFlow라는 이름의 `StatefulWidget`을 만들어서 관리한다.  
+간단하게 서브 네임 받아서 해당 페이지 위젯을 보여주고 내부 `Navigator`에 push해 주는 역할.
+위젯 내부에는 `Navigator`가 별도로 존재하는데 별도의 `GlobalKey`값을 넣어서 생성하기 때문에
+
+```dart
+_navigatorKey.currentState!.pushNamed(routeDeviceSetupSelectDevicePage);
+```
+
+클래스 내에서 요런 식으로 접근이 가능하도록 되어 있다.
+
+이 클래스 안에서 각각의 페이지는 자신이 가지는 콜백에 다음 페이지에 해당하는 서브 네임을 `pushNamed(SUB_NAME)`하는 함수를 등록해서 연속적으로 진행되도록 했다.
+
+```dart
+  Route _onGenerateRoute(RouteSettings settings) {
+    late Widget page;
+    switch (settings.name) {
+      case routeDeviceSetupStartPage:
+        page = WaitingPage(
+          message: 'Searching for nearby bulb...',
+          onWaitComplete: _onDiscoveryComplete,
+        );
+      case routeDeviceSetupSelectDevicePage:
+        page = SelectDevicePage(
+          onDeviceSelected: _onDeviceSelected,
+        );
+      case routeDeviceSetupConnectingPage:
+        page = WaitingPage(
+          message: 'Connecting...',
+          onWaitComplete: _onConnectionEstablished,
+        );
+      case routeDeviceSetupFinishedPage:
+        page = FinishedPage(
+          onFinishPressed: _exitSetup,
+        );
+  }
+```
+
+이것이 nested Navigator의 동작 로직
+
+근데 내 생각에는 [`go_router`](https://pub.dev/packages/go_router) 써야 될 듯? 위 방식은 너무 raw 함.
+
+**참고: `??` = "if null"**
+
+# 포토 필터 캐로셀
+
+핵심은 `FilterSelector`의 `State`위젯의
+
+1. `PageController`
+2. `build()`메소드
+3. 위젯을 리턴하는 함수인 `_buildCarousel`에 있는 `Flow` 인스턴스 생성법
+4. 그 arg인 `delegate` 사용법
+
+## `PageController`
+
+페이지 컨트롤러를 생성, 페이지네이션을 이루는 각 아이템을 몇 개 노출할 것인지 뷰포트 분할 값을 지정해 준다.
+
+```dart
+ @override
+  void initState() {
+    super.initState();
+    _page = 0;
+    _controller = PageController(
+      initialPage: _page,
+      viewportFraction: _viewportFractionPerItem,
+    );
+    _controller.addListener(_onPageChanged);
+  }
+```
+
+## `build()` 메소드
+
+`Scrollable` 위젯의 `axisDirection`, `physics`, `viewportBuilder`를 보자
+
+```dart
+  @override
+  Widget build(BuildContext context) {
+    return Scrollable(
+      controller: _controller,
+      axisDirection: AxisDirection.right,
+      physics: const PageScrollPhysics(),
+      viewportBuilder: (context, viewportOffset) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final itemSize = constraints.maxWidth * _viewportFractionPerItem;
+            viewportOffset
+              ..applyViewportDimension(constraints.maxWidth)
+              ..applyContentDimensions(0.0, itemSize * (filterCount - 1));
+
+            return Stack(
+              alignment: Alignment.bottomCenter,
+              children: [
+                _buildShadowGradient(itemSize),
+                _buildCarousel(
+                  viewportOffset: viewportOffset,
+                  itemSize: itemSize,
+                ),
+                _buildSelectionRing(itemSize),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+```
+
+## `Flow` 와 `delegate`
+
+Flow 선언 (FilterSelector 내부에 선언된 위젯이다.)
+
+```dart
+  Widget _buildCarousel({
+    required ViewportOffset viewportOffset,
+    required double itemSize,
+  }) {
+    return Container(
+      height: itemSize,
+      margin: widget.padding,
+      child: Flow(
+        // 동작을 위임할 수 있다.
+        delegate: CarouselFlowDelegate(
+          viewportOffset: viewportOffset,
+          filtersPerScreen: _filtersPerScreen,
+        ),
+        children: [
+          for (int i = 0; i < filterCount; i++)
+            FilterItem(
+              onFilterSelected: () => _onFilterTapped(i),
+              color: itemColor(i),
+            ),
+        ],
+      ),
+    );
+  }
+```
+
+`Flow`의 동작을 위임하여 구현하는 클래스
+
+```dart
+class CarouselFlowDelegate extends FlowDelegate {
+  CarouselFlowDelegate({
+    required this.viewportOffset,
+    required this.filtersPerScreen,
+  }) : super(repaint: viewportOffset);
+
+  final ViewportOffset viewportOffset;
+  final int filtersPerScreen;
+
+  @override
+  void paintChildren(FlowPaintingContext context) {
+    final count = context.childCount;
+
+    // All available painting width
+    final size = context.size.width;
+
+    // The distance that a single item "page" takes up from the perspective
+    // of the scroll paging system. We also use this size for the width and
+    // height of a single item.
+    final itemExtent = size / filtersPerScreen;
+
+    // The current scroll position expressed as an item fraction, e.g., 0.0,
+    // or 1.0, or 1.3, or 2.9, etc. A value of 1.3 indicates that item at
+    // index 1 is active, and the user has scrolled 30% towards the item at
+    // index 2.
+    final active = viewportOffset.pixels / itemExtent;
+
+    // Index of the first item we need to paint at this moment.
+    // At most, we paint 3 items to the left of the active item.
+    final min = math.max(0, active.floor() - 5).toInt();
+
+    // Index of the last item we need to paint at this moment.
+    // At most, we paint 3 items to the right of the active item.
+    final max = math.min(count - 1, active.ceil() + 5).toInt();
+
+    // Generate transforms for the visible items and sort by distance.
+    for (var index = min; index <= max; index++) {
+      final itemXFromCenter = itemExtent * index - viewportOffset.pixels;
+      final percentFromCenter = 1.0 - (itemXFromCenter / (size / 2)).abs();
+      final itemScale = 0.5 + (percentFromCenter * 0.5);
+      final opacity = 0.25 + (percentFromCenter * 0.75);
+
+      final itemTransform = Matrix4.identity()
+        ..translate((size - itemExtent) / 2)
+        ..translate(itemXFromCenter)
+        ..translate(itemExtent / 2, itemExtent / 2)
+        ..multiply(Matrix4.diagonal3Values(itemScale, itemScale, 1.0))
+        ..translate(-itemExtent / 2, -itemExtent / 2);
+
+      context.paintChild(
+        index,
+        transform: itemTransform,
+        opacity: opacity,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CarouselFlowDelegate oldDelegate) {
+    return oldDelegate.viewportOffset != viewportOffset;
+  }
+}
+```
