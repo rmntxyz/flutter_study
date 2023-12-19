@@ -1,5 +1,7 @@
 # Play and pause a video
 
+`video_player` 플러그인을 사용하면 된다. 파일 시스템, 에셋, 인터넷 상의 동영상을 재생할 수 있게 해준다. Android와 iOS 각각 플러그인이 사용하는 기본 플레이어가 다르다.
+
 ## Add the `video_player` dependency
 
 ```sh
@@ -36,7 +38,11 @@ $ flutter pub add video_player
 </dict>
 ```
 
+> iOS 시뮬레이터에서는 에셋의 영상밖에 지원되지 않는다. 만약 인터넷상의 영상을 재생하기 위해서는 실제 물리 디바이스에서 테스트 해야 한다.
+
 ## Create and initialize a `VideoPlayerController`
+
+`VideoPlayerController`를 만들어서 사용하면 여러가지 유형의 비디오에 연결하고 재생을 제어할 수 있다.
 
 컨트롤러 초기화를 먼저 해 주면 비디오 연결되고 컨트롤러가 재생 준비를 마친다.
 
