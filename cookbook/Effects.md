@@ -529,7 +529,7 @@ class CarouselFlowDelegate extends FlowDelegate {
 
 ## IgnorePointer
 
-ignoring 프로퍼티를 통해 boolean를 받으며, ignoring:true일 경우 child로 지정된 위젯이 사용자 제스처 무시. 예제의 경우 메뉴가 열린 후 열기 버튼이 동작하지 않도록 열기 버튼을 IgnorePointer의 child로 사용.
+ignoring 프로퍼티를 통해 boolean를 받으며, ignoring:true일 경우 child로 지정된 위젯이 사용자 제스처 무시. 예제의 경우 메뉴가 열린 후 열기 버튼이 동작하지 않도록 열기 버튼을 IgnorePointer의 child로 사용. 예제에서는 메뉴가 열린 후 오픈 버튼(닫기 버튼, 메뉴 아이콘들과 함께 Stack의 children으로 사용되었으며 메뉴가 열린 후엔 opacity: 0이 되도록 설정)을 disable하기 위해 사용.
 
 ## Positioned & Stack
 
