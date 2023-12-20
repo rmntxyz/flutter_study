@@ -326,11 +326,11 @@ target 'Runner' do
 end
 ```
 
-또는 콘솔에서 코코아파드 제거 & 재설치
+또는 콘솔에서 코코아파드 제거 & 재설치(우리에겐 해당되지 않는 방법인 듯?)
 
 ```dart
 # Uninstall the local cocoapods gem
-sudo gem uninstall cocoapods
+sudo gem uninstall cocoapods 
 
 # Reinstall cocoapods via Homebrew
 brew install cocoapods

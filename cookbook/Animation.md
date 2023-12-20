@@ -50,7 +50,7 @@ Route _createRoute() {
 
 ### transitionBuilder의 animation 파라미터
 
-Animation<double>[링크](https://docs.flutter.dev/ui/animations/tutorial#animationdouble). 0과 1 사이의 값을 생성.
+Animation<double>([링크](https://docs.flutter.dev/ui/animations/tutorial#animationdouble)). 0과 1 사이의 값을 생성.
 
 ### SlideTransition
 

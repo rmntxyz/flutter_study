@@ -155,7 +155,7 @@ const _shimmerGradient = LinearGradient(
 ```
 
 Alignment: 사각형 내의 지점을 나타내는 클래스
-tilMode: begin 지점 이전과 end 지점 이후의 그라데이션 방식 지정[링크](https://api.flutter.dev/flutter/painting/LinearGradient/tileMode.html)
+tileMode: begin 지점 이전과 end 지점 이후의 그라데이션 방식 지정([링크](https://api.flutter.dev/flutter/painting/LinearGradient/tileMode).html)
 
 3. 그라데이션 위젯 생성
 
@@ -179,11 +179,13 @@ LinearGradient의 `createShader`메소드 이용
 
 3. 그라데이션 위젯으로 검정색 컨테이너 감싸기
 
-4. 화면 전체 스켈레톤 뷰에 그라데이션 넣기 (나중에 직접 해보기)
+4. 화면 전체 스켈레톤 뷰에 그라데이션 넣기: 각 그라데이션 위젯을 감싸는 다른 그라데이션 위젯 필요. 하위 위젯이 필요로 하는 그라데이션과 사이즈를 상위 위젯에 전달하는 식.
 
-5. 그라데이션 애니메이션화하기
+- `findRenderObject`: 위젯이 렌더링하는 객체를 찾는 메소드 (`Size get size => (context.findRenderObject() as RenderBox).size`). 이 방법으로 하위 그라데이션 위젯의 폭과 높이를 파악
+- `localToGlobal`: 해당 위젯이 전체 화면에서 차지하는 위치 파악. (`widget.localToGlobal(Offset.zero)`)
+- `Rect.fromLTWH(double left, double top, double width, double height)`: 주어진 left와 top으로부터 주어진 폭과 높이로 사각형 생성
 
-LienearGradient의 `transform` 프로퍼티 사용
+5. 그라데이션 애니메이션화하기: LienearGradient의 `transform` 프로퍼티 사용
 
 # 다운로드 버튼
 
@@ -519,4 +521,36 @@ class CarouselFlowDelegate extends FlowDelegate {
     return oldDelegate.viewportOffset != viewportOffset;
   }
 }
+```
+
+# FAB
+
+눌렀을 때 세부 메뉴가 펼쳐지듯 나오는 아이콘. 메뉴가 열린 후에는 닫기 아이콘으로 대체.
+
+## IgnorePointer
+
+ignoring 프로퍼티를 통해 boolean를 받으며, ignoring:true일 경우 child로 지정된 위젯이 사용자 제스처 무시. 예제의 경우 메뉴가 열린 후 열기 버튼이 동작하지 않도록 열기 버튼을 IgnorePointer의 child로 사용.
+
+## Positioned & Stack
+
+Stack 클래스의 자식의 위치를 결정하는 위젯. Stack과 Positioned 사이엔 Stateless/Stateful 위젯만 있어야 정상 작동(RenderObjectWidget 등은 사용 불가). top(non-null, 자동으로 top:0인 듯), bottom, left, right 값에 따라 stack 안에서 위치가 결정
+
+```dart
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: Stack(
+        alignment: Alignment.bottomRight,
+        clipBehavior: Clip.none,
+        children: [
+          ...
+          Positioned(
+          right: ...
+        ],
+      ),
+    );
+  }
+
+
 ```
