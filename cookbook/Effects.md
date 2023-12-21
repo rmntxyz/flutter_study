@@ -523,6 +523,116 @@ class CarouselFlowDelegate extends FlowDelegate {
 }
 ```
 
+# Parallax
+
+이미지 리스트(SingleChildScrollView의 자식)를 위로 스크롤하면 이미지가 아래쪽으로, 아래로 스크롤하면 위쪽으로 이동함으로써 보이는 효과. 리스트 아이템의 스크롤 포지션이 변하면서 내부의 이미지(Positioned.fill로 설정)도 포지션 변경 필요. 화면 상 리스트 아이템의 위치는 레이아웃 단계에서는 알 수 없으므로 내부 이미지의 위치도 이후에 일어나는 그리기 단계에서 파악해야 함. 이 때에 사용하는 위젯이 Flow로서 위젯이 그려지기 직전에 하부 위젯의 위치 조정을 가능하게 함
+
+## Photo filter carousel과 Parallax effct 예제 속의 Flow 사용 비교
+
+- 모두 스크롤 중 자식 위젯의 위치 조정을 목적으로 Flow 사용.
+- 모두 Scrollable 위젯을 상위 위젯으로 사용(Filter carousel은 PageView, Parallax는 SingleChildScrollView)
+- 하지만 Filter carousel은 Flow 없이도 PageController만으로 정상 작동(예제에서도 Flow는 마지막으로 종합된 코드에서만 사용. 왜 사용했을까?)
+
+## Parallax effect 구현하기
+
+1. 내부 이미지 위젯을 기존의 Positioned.fill에서 `Flow`로 변경
+
+before
+
+```dart
+  Widget _buildParallaxBackground(BuildContext context) {
+    return Positioned.fill(child: Image.network(imageUrl, fit: BoxFit.cover));
+  }
+```
+
+after
+
+```dart
+Widget _buildParallaxBackground(BuildContext context) {
+    return Flow(
+      delegate: ParallaxFlowDelegate(
+        scrollable: Scrollable.of(context),
+        listItemContext: context,
+        backgroundImageKey: _backgroundImageKey,
+      ),
+      children: [
+        Image.network(
+          imageUrl,
+          key: _backgroundImageKey,
+          fit: BoxFit.cover,
+        ),
+      ],
+    );
+  }
+```
+
+2. `FlowDelegate`(paintChildren, shouldRepaint 함수 정의 필요)을 이용해 자식 위젯의 크기와 위치 조정
+
+- `getConstraintsForChild` 메소드로 이미지 폭 결정
+
+```dart
+class ParallaxFlowDelegate extends FlowDelegate {
+  ParallaxFlowDelegate();
+
+  @override
+  BoxConstraints getConstraintsForChild(int i, BoxConstraints constraints) {
+    return BoxConstraints.tightFor(
+      width: constraints.maxWidth,
+    );
+  }
+```
+
+- 파라미터 값(scrollable, listItemContext, backgroundImageKey)이 변경되면 이미지가 다시 그려지도록 `shouldRepaint` 작성
+
+```dart
+@override
+bool shouldRepaint(ParallaxFlowDelegate oldDelegate) {
+  return scrollable != oldDelegate.scrollable ||
+      listItemContext != oldDelegate.listItemContext ||
+      backgroundImageKey != oldDelegate.backgroundImageKey;
+}
+```
+
+- 화면/뷰포트(예제에서는 Scrollable.of(리스트 아이템의 context)로 상위 위젯인 Column의 state 이용)에서 개별 항목이 자리한 위치 계산: `localToGlobal` 이용
+
+```dart
+@override
+void paintChildren(FlowPaintingContext context) {
+  // Calculate the position of this list item within the viewport.
+  final scrollableBox = scrollable.context.findRenderObject() as RenderBox;
+  final listItemBox = listItemContext.findRenderObject() as RenderBox;
+  final listItemOffset = listItemBox.localToGlobal(
+      listItemBox.size.centerLeft(Offset.zero),
+      ancestor: scrollableBox);
+}
+```
+
+3. `Alignment.inscribe`를 이용해 이미지가 그려질 자리 마련
+
+- Alignment.inscribe(Size size, Rect rect) 형태로서 주어진 rect 안에서 주어진 size의 사각형을 그림
+
+4. `paintChild`메소드로 transform 값 지정과 함께 이미지 그리기
+
+```dart
+ context.paintChild(
+    0,
+    transform:
+        Transform.translate(offset: Offset(0.0, childRect.top)).transform,
+  );
+```
+
+5. 스크롤 포지션이 변경될 때마다 이미지가 다시 그려지도록 FlowDelegate의 `repaint: scrollable.position`를 superclass 지정
+
+```dart
+class ParallaxFlowDelegate extends FlowDelegate {
+  ParallaxFlowDelegate({
+    required this.scrollable,
+    required this.listItemContext,
+    required this.backgroundImageKey,
+  }) : super(repaint: scrollable.position);
+}
+```
+
 # FAB
 
 눌렀을 때 세부 메뉴가 펼쳐지듯 나오는 아이콘. 메뉴가 열린 후에는 닫기 아이콘으로 대체.
