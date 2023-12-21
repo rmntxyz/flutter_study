@@ -531,7 +531,7 @@ class CarouselFlowDelegate extends FlowDelegate {
 
 - 모두 스크롤 중 자식 위젯의 위치 조정을 목적으로 Flow 사용.
 - 모두 Scrollable 위젯을 상위 위젯으로 사용(Filter carousel은 PageView, Parallax는 SingleChildScrollView)
-- 하지만 Filter carousel은 Flow 없이도 PageController만으로 정상 작동(예제에서도 Flow는 마지막으로 종합된 코드에서만 사용. 왜 사용했을까?)
+- 하지만 Filter carousel은 Flow 없이도 PageController만으로 정상 작동(예제에서도 Flow는 마지막으로 종합된 코드에서만 사용. 왜 사용했을까? -> Flow를 제외한 코드에서는 처음 로드 시 \_controller.position.hasContentDimensions == false여서 필터가 보이지 않으며, 스크롤이 발생해야 필터가 표시되고 이후 정상 작동. Flow 없이 이 문제를 해결할 수 없을까...)
 
 ## Parallax effect 구현하기
 
