@@ -1,4 +1,4 @@
-- infinite list를 위한 패키지
+- Provider는 위젯 간의 상태 공유를 위한 패키지로서 infinite list에도 이용
 - InheritedWidget(of 메소드를 통해 데이터를 먼 자식에게도 전할 수 있는 위젯. 예: Scaffold, Theme)과 같은 역할
 - List를 Selector로 감싸서 사용. 이 때 selector 파라미터에 리슨해야 하는 데이터 지정
 
