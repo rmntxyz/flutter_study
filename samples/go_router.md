@@ -48,7 +48,7 @@
 
 ```
 
-네비게이션 관련 방법 세 가지가 모두 나와 있는 부분 (GoRouter.go와 Navigator.push는 혼용 가능한가?)
+네비게이션 관련 방법 세 가지가 모두 나와 있는 부분
 
 ```dart
  TextButton(
